@@ -1,6 +1,7 @@
 # RLS Guard Dog System
 
 [Live Demo](https://rls-guard-dog-system.vercel.app/)  
+LIVE DEPLOY LINK : https://rls-guard-dog-system.vercel.app/
 
 A secure student-classroom progress tracking application that uses Supabase Row-Level Security (RLS) to ensure students only see their own data, while teachers can see/manage data for their classrooms.
 
