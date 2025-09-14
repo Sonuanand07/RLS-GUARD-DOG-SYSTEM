@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/d8da9165-40a4-46bf-a029-85df39f5b457
+DEPLOY LINK: https://rls-guard-dog-system.vercel.app/
 
 ## How can I edit this code?
 
