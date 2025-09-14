@@ -16,33 +16,33 @@ export type Database = {
     Tables: {
       classrooms: {
         Row: {
+          class_name: string
           created_at: string | null
-          description: string | null
+          grade: string | null
           id: string
-          name: string
-          teacher_id: string
+          student_id: string
           updated_at: string | null
         }
         Insert: {
+          class_name: string
           created_at?: string | null
-          description?: string | null
+          grade?: string | null
           id?: string
-          name: string
-          teacher_id: string
+          student_id: string
           updated_at?: string | null
         }
         Update: {
+          class_name?: string
           created_at?: string | null
-          description?: string | null
+          grade?: string | null
           id?: string
-          name?: string
-          teacher_id?: string
+          student_id?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "classrooms_teacher_id_fkey"
-            columns: ["teacher_id"]
+            foreignKeyName: "classrooms_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -54,6 +54,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           first_name: string | null
+          full_name: string | null
           id: string
           last_name: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           first_name?: string | null
+          full_name?: string | null
           id: string
           last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -72,6 +74,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           first_name?: string | null
+          full_name?: string | null
           id?: string
           last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -81,46 +84,27 @@ export type Database = {
       }
       progress: {
         Row: {
-          classroom_id: string
-          completion_date: string | null
-          created_at: string | null
           id: string
-          notes: string | null
-          score: number | null
+          status: string | null
           student_id: string
-          subject: string
+          topic: string
           updated_at: string | null
         }
         Insert: {
-          classroom_id: string
-          completion_date?: string | null
-          created_at?: string | null
           id?: string
-          notes?: string | null
-          score?: number | null
+          status?: string | null
           student_id: string
-          subject: string
+          topic: string
           updated_at?: string | null
         }
         Update: {
-          classroom_id?: string
-          completion_date?: string | null
-          created_at?: string | null
           id?: string
-          notes?: string | null
-          score?: number | null
+          status?: string | null
           student_id?: string
-          subject?: string
+          topic?: string
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "progress_classroom_id_fkey"
-            columns: ["classroom_id"]
-            isOneToOne: false
-            referencedRelation: "classrooms"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "progress_student_id_fkey"
             columns: ["student_id"]

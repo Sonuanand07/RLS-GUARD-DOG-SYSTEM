@@ -10,24 +10,17 @@ import { LogOut, BookOpen, TrendingUp } from 'lucide-react';
 
 interface Classroom {
   id: string;
-  name: string;
-  description?: string;
-  teacher: {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-  };
+  class_name: string;
+  grade?: string;
+  student_id: string;
 }
 
 interface Progress {
   id: string;
-  subject: string;
-  score: number;
-  completion_date?: string;
-  notes?: string;
-  classroom: {
-    name: string;
-  };
+  topic: string;
+  status: string;
+  updated_at?: string;
+  student_id: string;
 }
 
 const StudentDashboard = () => {
@@ -48,37 +41,20 @@ const StudentDashboard = () => {
     try {
       setLoading(true);
 
-      // Fetch classrooms where student has progress
+      // Fetch student's classrooms
       const { data: classroomData, error: classroomError } = await supabase
         .from('classrooms')
-        .select(`
-          id,
-          name,
-          description,
-          teacher:teacher_id (
-            first_name,
-            last_name,
-            email
-          )
-        `);
+        .select('*')
+        .eq('student_id', user.id);
 
       if (classroomError) throw classroomError;
 
       // Fetch student's progress
       const { data: progressData, error: progressError } = await supabase
         .from('progress')
-        .select(`
-          id,
-          subject,
-          score,
-          completion_date,
-          notes,
-          classroom:classroom_id (
-            name
-          )
-        `)
+        .select('*')
         .eq('student_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (progressError) throw progressError;
 
@@ -96,17 +72,37 @@ const StudentDashboard = () => {
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'bg-green-500';
-    if (score >= 80) return 'bg-blue-500';
-    if (score >= 70) return 'bg-yellow-500';
-    return 'bg-red-500';
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed': return 'bg-green-500';
+      case 'in_progress': return 'bg-blue-500';
+      case 'pending': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
   };
 
-  const calculateAverageScore = () => {
-    if (progress.length === 0) return 0;
-    const total = progress.reduce((sum, p) => sum + p.score, 0);
-    return Math.round(total / progress.length);
+  const updateProgress = async (id: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('progress')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Refresh data
+      fetchData();
+      toast({
+        title: "Success",
+        description: "Progress updated successfully"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error", 
+        description: "Failed to update progress",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -162,12 +158,14 @@ const StudentDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Average Score
+                Completed Tasks
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{calculateAverageScore()}%</div>
+              <div className="text-2xl font-bold">
+                {progress.filter(p => p.status === 'completed').length}
+              </div>
             </CardContent>
           </Card>
           
@@ -179,9 +177,7 @@ const StudentDashboard = () => {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {new Set(progress.map(p => p.classroom?.name)).size}
-              </div>
+              <div className="text-2xl font-bold">{classrooms.length}</div>
             </CardContent>
           </Card>
         </div>
@@ -198,7 +194,7 @@ const StudentDashboard = () => {
             {progress.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">
-                  No progress records found. Your teachers will add progress as you complete assignments.
+                  No progress records found. Start tracking your learning progress!
                 </p>
               </div>
             ) : (
@@ -210,23 +206,37 @@ const StudentDashboard = () => {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold">{record.subject}</h3>
+                        <h3 className="font-semibold">{record.topic}</h3>
                         <Badge 
-                          className={`text-white ${getScoreColor(record.score)}`}
+                          className={`text-white ${getStatusColor(record.status)}`}
                         >
-                          {record.score}%
+                          {record.status.replace('_', ' ')}
                         </Badge>
                       </div>
                       
                       <div className="text-sm text-muted-foreground space-y-1">
-                        <p>Classroom: {record.classroom?.name}</p>
-                        {record.completion_date && (
-                          <p>Completed: {new Date(record.completion_date).toLocaleDateString()}</p>
-                        )}
-                        {record.notes && (
-                          <p>Notes: {record.notes}</p>
+                        {record.updated_at && (
+                          <p>Updated: {new Date(record.updated_at).toLocaleDateString()}</p>
                         )}
                       </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateProgress(record.id, 'in_progress')}
+                        disabled={record.status === 'in_progress'}
+                      >
+                        In Progress
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => updateProgress(record.id, 'completed')}
+                        disabled={record.status === 'completed'}
+                      >
+                        Complete
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -235,44 +245,36 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Available Classrooms */}
+        {/* My Classrooms */}
         <Card>
           <CardHeader>
-            <CardTitle>Available Classrooms</CardTitle>
+            <CardTitle>My Classrooms</CardTitle>
             <CardDescription>
-              Classrooms you have access to
+              Classes you are enrolled in
             </CardDescription>
           </CardHeader>
           <CardContent>
             {classrooms.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">
-                  No classrooms available. Contact your teachers to get enrolled.
+                  No classrooms enrolled yet.
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {classrooms
-                  .filter(classroom => 
-                    progress.some(p => p.classroom?.name === classroom.name)
-                  )
-                  .map((classroom) => (
-                    <div 
-                      key={classroom.id}
-                      className="p-4 border rounded-lg"
-                    >
-                      <h3 className="font-semibold mb-2">{classroom.name}</h3>
-                      {classroom.description && (
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {classroom.description}
-                        </p>
-                      )}
+                {classrooms.map((classroom) => (
+                  <div 
+                    key={classroom.id}
+                    className="p-4 border rounded-lg"
+                  >
+                    <h3 className="font-semibold mb-2">{classroom.class_name}</h3>
+                    {classroom.grade && (
                       <div className="text-sm text-muted-foreground">
-                        <p>Teacher: {classroom.teacher?.first_name} {classroom.teacher?.last_name}</p>
-                        <p>Email: {classroom.teacher?.email}</p>
+                        <p>Grade: {classroom.grade}</p>
                       </div>
-                    </div>
-                  ))}
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
