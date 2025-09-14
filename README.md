@@ -1,28 +1,73 @@
-# Welcome to your Lovable project
+# RLS Guard Dog System
 
-## Project info
+[Live Demo](https://rls-guard-dog-system.vercel.app/)  
 
-DEPLOY LINK: https://rls-guard-dog-system.vercel.app/
+A secure student-classroom progress tracking application that uses Supabase Row-Level Security (RLS) to ensure students only see their own data, while teachers can see/manage data for their classrooms.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🧰 Technologies Used
 
-**Use Lovable**
+| Layer | Technology |
+|-------|-------------|
+| Authentication & Authorization | Supabase Auth (email/password, roles: student & teacher) |
+| Database & RLS Policies | Supabase Postgres |
+| ORM / Query Layer | Supabase / SQL |
+| Frontend | Next.js (App Router) + React |
+| UI / Styling | Tailwind CSS + shadcn/ui (or similar component library) |
+| State Management | React Query (TanStack Query), Zustand |
+| Deployment | Vercel |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d8da9165-40a4-46bf-a029-85df39f5b457) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🔒 Features
 
-**Use your preferred IDE**
+- User signup & login (email/password + role-based access)  
+- Role types: **Student** & **Teacher**  
+- Classrooms table: each classroom belongs to a teacher  
+- Enrollment: students are enrolled in classrooms  
+- Progress: students have progress records for modules  
+- **Row-Level Security**:  
+  - Students can only see their own progress and enrolled classroom info  
+  - Teachers can view progress & classroom data for students in their classrooms  
+- UI Pages include:  
+  - Login / Registration  
+  - Dashboard / Profile  
+  - Classrooms list  
+  - Progress table  
+  - Student view & Teacher view  
+- Responsive design & user experience considerations
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🛠 Database Schema
 
-Follow these steps:
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `profiles` | `id`, `email`, `role` | Stores user role (student/teacher) and email |
+| `classrooms` | `id`, `name`, `teacher_id` | Defines classroom & which teacher owns it |
+| `progress` | `id`, `student_id`, `classroom_id`, `module`, `score`, `updated_at` | Module progress data for students |
 
-```sh
+---
+
+## 🔐 RLS Policies
+
+- All tables have Row-Level Security enabled  
+- Policies implemented:
+  1. **profiles**: Users can only select their own profile
+  2. **classrooms**: Teachers can view the classrooms they own; students can view classrooms where they are enrolled
+  3. **progress**: Students see only their own progress; Teachers see progress for students in their classrooms; Teachers may update progress; students may insert or view their own
+
+---
+
+## 🤝 Setup Instructions (Locally)
+
+1. Clone repo  
+   `git clone <repo-url>`  
+2. Install dependencies  
+   `npm install`  
+3. Configure environment variables – create a `.env.local` file  
+
 # Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
 
@@ -60,14 +105,5 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/d8da9165-40a4-46bf-a029-85df39f5b457) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
