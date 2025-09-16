@@ -5,9 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { QuickActions } from '@/components/QuickActions';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -78,7 +79,6 @@ const TeacherDashboard = () => {
 
   const createStudent = async () => {
     try {
-      // First create the auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newStudent.email,
         password: newStudent.password,
@@ -93,7 +93,6 @@ const TeacherDashboard = () => {
 
       if (authError) throw authError;
 
-      // The profile will be created automatically via trigger
       toast({ title: "Success", description: "Student created successfully" });
       setNewStudent({ email: '', password: '', firstName: '', lastName: '', fullName: '' });
       setDialogOpen(prev => ({ ...prev, student: false }));
@@ -141,6 +140,22 @@ const TeacherDashboard = () => {
     }
   };
 
+  const updateProgress = async (id: string, updates: Partial<Progress>) => {
+    try {
+      const { error } = await supabase
+        .from('progress')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast({ title: "Success", description: "Progress updated successfully" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Error", description: "Failed to update progress", variant: "destructive" });
+    }
+  };
+
   const deleteProgress = async (id: string) => {
     try {
       const { error } = await supabase.from('progress').delete().eq('id', id);
@@ -169,232 +184,182 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b bg-gradient-to-r from-primary/5 to-purple-50 dark:from-primary/10 dark:to-purple-950/50">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <GraduationCap className="w-8 h-8 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-full">
+                <GraduationCap className="w-8 h-8 text-primary" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-primary">Teacher Dashboard</h1>
+                <h1 className="text-2xl font-bold text-primary">Teacher Control Center</h1>
                 <p className="text-muted-foreground">Welcome back, {profile?.first_name} {profile?.last_name}</p>
+                <Badge variant="secondary" className="mt-1 bg-primary/10 text-primary">
+                  Administrator Access
+                </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-primary/10 text-primary">Teacher Access</Badge>
-              <Button variant="outline" onClick={signOut}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
+            <Button variant="outline" onClick={signOut} className="flex items-center gap-2">
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
         {/* Quick Actions */}
-        <div className="flex gap-4 mb-8">
-          <Dialog open={dialogOpen.student} onOpenChange={(open) => setDialogOpen(prev => ({ ...prev, student: open }))}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <UserPlus className="w-4 h-4" />
-                Add Student
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Student</DialogTitle>
-                <DialogDescription>Add a new student to the system</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>First Name</Label>
-                    <Input 
-                      value={newStudent.firstName}
-                      onChange={(e) => setNewStudent(prev => ({ ...prev, firstName: e.target.value }))}
-                      placeholder="Enter first name"
-                    />
-                  </div>
-                  <div>
-                    <Label>Last Name</Label>
-                    <Input 
-                      value={newStudent.lastName}
-                      onChange={(e) => setNewStudent(prev => ({ ...prev, lastName: e.target.value }))}
-                      placeholder="Enter last name"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input 
-                    type="email"
-                    value={newStudent.email}
-                    onChange={(e) => setNewStudent(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="student@example.com"
-                  />
-                </div>
-                <div>
-                  <Label>Temporary Password</Label>
-                  <Input 
-                    type="password"
-                    value={newStudent.password}
-                    onChange={(e) => setNewStudent(prev => ({ ...prev, password: e.target.value }))}
-                    placeholder="Enter temporary password"
-                  />
-                </div>
-                <Button onClick={createStudent} className="w-full">Create Student</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+        <QuickActions
+          onAddStudent={() => setDialogOpen(prev => ({ ...prev, student: true }))}
+          onAddClassroom={() => setDialogOpen(prev => ({ ...prev, classroom: true }))}
+          onAddProgress={() => setDialogOpen(prev => ({ ...prev, progress: true }))}
+          stats={{
+            students: students.length,
+            classrooms: classrooms.length,
+            progress: progress.length,
+            completed: progress.filter(p => p.status === 'completed').length
+          }}
+        />
 
-          <Dialog open={dialogOpen.classroom} onOpenChange={(open) => setDialogOpen(prev => ({ ...prev, classroom: open }))}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Add Classroom
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Classroom</DialogTitle>
-                <DialogDescription>Assign a student to a new classroom</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
+        {/* Dialog Components */}
+        <Dialog open={dialogOpen.student} onOpenChange={(open) => setDialogOpen(prev => ({ ...prev, student: open }))}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Student</DialogTitle>
+              <DialogDescription>Add a new student to the system</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Class Name</Label>
+                  <Label>First Name</Label>
                   <Input 
-                    value={newClassroom.className}
-                    onChange={(e) => setNewClassroom(prev => ({ ...prev, className: e.target.value }))}
-                    placeholder="e.g., Mathematics 101"
+                    value={newStudent.firstName}
+                    onChange={(e) => setNewStudent(prev => ({ ...prev, firstName: e.target.value }))}
+                    placeholder="Enter first name"
                   />
                 </div>
                 <div>
-                  <Label>Grade</Label>
+                  <Label>Last Name</Label>
                   <Input 
-                    value={newClassroom.grade}
-                    onChange={(e) => setNewClassroom(prev => ({ ...prev, grade: e.target.value }))}
-                    placeholder="e.g., Grade 10"
+                    value={newStudent.lastName}
+                    onChange={(e) => setNewStudent(prev => ({ ...prev, lastName: e.target.value }))}
+                    placeholder="Enter last name"
                   />
                 </div>
-                <div>
-                  <Label>Student</Label>
-                  <Select value={newClassroom.studentId} onValueChange={(value) => setNewClassroom(prev => ({ ...prev, studentId: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a student" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {students.map(student => (
-                        <SelectItem key={student.id} value={student.id}>
-                          {student.full_name || `${student.first_name} ${student.last_name}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={createClassroom} className="w-full">Create Classroom</Button>
               </div>
-            </DialogContent>
-          </Dialog>
+              <div>
+                <Label>Email</Label>
+                <Input 
+                  type="email"
+                  value={newStudent.email}
+                  onChange={(e) => setNewStudent(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="student@example.com"
+                />
+              </div>
+              <div>
+                <Label>Temporary Password</Label>
+                <Input 
+                  type="password"
+                  value={newStudent.password}
+                  onChange={(e) => setNewStudent(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Enter temporary password"
+                />
+              </div>
+              <Button onClick={createStudent} className="w-full">Create Student</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-          <Dialog open={dialogOpen.progress} onOpenChange={(open) => setDialogOpen(prev => ({ ...prev, progress: open }))}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <ClipboardList className="w-4 h-4" />
-                Add Progress
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Progress Record</DialogTitle>
-                <DialogDescription>Track a student's progress on a topic</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Student</Label>
-                  <Select value={newProgress.studentId} onValueChange={(value) => setNewProgress(prev => ({ ...prev, studentId: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a student" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {students.map(student => (
-                        <SelectItem key={student.id} value={student.id}>
-                          {student.full_name || `${student.first_name} ${student.last_name}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Topic</Label>
-                  <Input 
-                    value={newProgress.topic}
-                    onChange={(e) => setNewProgress(prev => ({ ...prev, topic: e.target.value }))}
-                    placeholder="e.g., Algebra Basics"
-                  />
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select value={newProgress.status} onValueChange={(value) => setNewProgress(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={createProgress} className="w-full">Create Progress Record</Button>
+        <Dialog open={dialogOpen.classroom} onOpenChange={(open) => setDialogOpen(prev => ({ ...prev, classroom: open }))}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Classroom</DialogTitle>
+              <DialogDescription>Assign a student to a new classroom</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Class Name</Label>
+                <Input 
+                  value={newClassroom.className}
+                  onChange={(e) => setNewClassroom(prev => ({ ...prev, className: e.target.value }))}
+                  placeholder="e.g., Mathematics 101"
+                />
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <div>
+                <Label>Grade</Label>
+                <Input 
+                  value={newClassroom.grade}
+                  onChange={(e) => setNewClassroom(prev => ({ ...prev, grade: e.target.value }))}
+                  placeholder="e.g., Grade 10"
+                />
+              </div>
+              <div>
+                <Label>Student</Label>
+                <Select value={newClassroom.studentId} onValueChange={(value) => setNewClassroom(prev => ({ ...prev, studentId: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a student" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {students.map(student => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.full_name || `${student.first_name} ${student.last_name}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={createClassroom} className="w-full">Create Classroom</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{students.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Classrooms</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{classrooms.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Progress Records</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{progress.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {progress.filter(p => p.status === 'completed').length}
+        <Dialog open={dialogOpen.progress} onOpenChange={(open) => setDialogOpen(prev => ({ ...prev, progress: open }))}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Progress Record</DialogTitle>
+              <DialogDescription>Track a student's progress on a topic</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Student</Label>
+                <Select value={newProgress.studentId} onValueChange={(value) => setNewProgress(prev => ({ ...prev, studentId: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a student" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {students.map(student => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.full_name || `${student.first_name} ${student.last_name}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div>
+                <Label>Topic</Label>
+                <Input 
+                  value={newProgress.topic}
+                  onChange={(e) => setNewProgress(prev => ({ ...prev, topic: e.target.value }))}
+                  placeholder="e.g., Algebra Basics"
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={newProgress.status} onValueChange={(value) => setNewProgress(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={createProgress} className="w-full">Create Progress Record</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Management Tabs */}
         <Tabs defaultValue="students" className="w-full">
@@ -476,12 +441,12 @@ const TeacherDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>All Progress Records ({progress.length})</CardTitle>
-                <CardDescription>Track and manage student progress</CardDescription>
+                <CardDescription>Track and manage student progress with inline editing</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {progress.map(record => (
-                    <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                       <div>
                         <p className="font-medium">{record.topic}</p>
                         <p className="text-sm text-muted-foreground">
@@ -489,12 +454,16 @@ const TeacherDashboard = () => {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={record.status === 'completed' ? 'default' : record.status === 'in_progress' ? 'secondary' : 'outline'}>
-                          {record.status.replace('_', ' ')}
-                        </Badge>
-                        <Button size="sm" variant="outline">
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        <Select value={record.status} onValueChange={(value) => updateProgress(record.id, { status: value })}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <Button size="sm" variant="destructive" onClick={() => deleteProgress(record.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { User } from 'lucide-react';
 
 const Auth = () => {
   const { user, profile, signIn, signUp } = useAuth();
@@ -108,15 +109,38 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">RLS Guard Dog</CardTitle>
-          <CardDescription>
-            Secure classroom management system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        {/* Demo Credentials Card */}
+        <Card className="bg-primary/5 border-primary/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2 text-primary">
+              <User className="w-4 h-4" />
+              Demo Credentials - Use These to Login
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="space-y-1 p-3 bg-green-50 rounded border border-green-200">
+              <p className="font-medium text-green-800">👩‍🏫 Teacher Account:</p>
+              <p className="text-green-700">Email: teacher@demo.com</p>
+              <p className="text-green-700">Password: password123</p>
+            </div>
+            <div className="space-y-1 p-3 bg-blue-50 rounded border border-blue-200">
+              <p className="font-medium text-blue-800">👨‍🎓 Student Accounts:</p>
+              <p className="text-blue-700">Email: student1@demo.com or student2@demo.com</p>
+              <p className="text-blue-700">Password: password123 (both)</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="w-full">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">RLS Guard Dog</CardTitle>
+            <CardDescription>
+              Secure classroom management system with Row Level Security
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -250,6 +274,7 @@ const Auth = () => {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 };
 

@@ -120,29 +120,25 @@ const StudentDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-blue-500" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-500/10 rounded-full">
+                <BookOpen className="w-8 h-8 text-blue-600" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-blue-600">Student Dashboard</h1>
-                <p className="text-muted-foreground">
-                  Welcome back, {profile?.first_name} {profile?.last_name}
-                </p>
+                <h1 className="text-2xl font-bold text-foreground">Student Portal</h1>
+                <p className="text-muted-foreground">Welcome back, {profile?.first_name} {profile?.last_name}</p>
+                <Badge variant="secondary" className="mt-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                  Student Access
+                </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-blue-200 text-blue-700">Student Access</Badge>
-              <Button 
-                variant="outline" 
-                onClick={signOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </Button>
-            </div>
+            <Button variant="outline" onClick={signOut} className="flex items-center gap-2">
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </Button>
           </div>
         </div>
       </header>
