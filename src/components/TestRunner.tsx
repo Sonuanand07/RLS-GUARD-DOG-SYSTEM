@@ -94,15 +94,14 @@ const TestRunner: React.FC = () => {
     }
 
     // Test 2: Student cannot access other student's data
+    const test2Start = Date.now();
     try {
-      const testStart = Date.now();
-      
       // This would require creating two students and testing isolation
       // For now, we'll simulate this test
       tests.push({
         name: 'Student data isolation',
         passed: true,
-        duration: Date.now() - testStart
+        duration: Date.now() - test2Start
       });
       
     } catch (error: any) {
@@ -110,14 +109,13 @@ const TestRunner: React.FC = () => {
         name: 'Student data isolation',
         passed: false,
         error: error.message,
-        duration: Date.now() - testStart
+        duration: Date.now() - test2Start
       });
     }
 
     // Test 3: Teacher can access all data
+    const test3Start = Date.now();
     try {
-      const testStart = Date.now();
-      
       const teacherEmail = `test-teacher-${Date.now()}@test.com`;
       const { data: teacherAuth, error: teacherError } = await supabase.auth.signUp({
         email: teacherEmail,
@@ -146,7 +144,7 @@ const TestRunner: React.FC = () => {
       tests.push({
         name: 'Teacher can access all data',
         passed: true,
-        duration: Date.now() - testStart
+        duration: Date.now() - test3Start
       });
 
       // Cleanup
@@ -157,7 +155,7 @@ const TestRunner: React.FC = () => {
         name: 'Teacher can access all data',
         passed: false,
         error: error.message,
-        duration: Date.now() - testStart
+        duration: Date.now() - test3Start
       });
     }
 
@@ -177,9 +175,8 @@ const TestRunner: React.FC = () => {
     const tests: TestResult[] = [];
 
     // Test 1: User registration
+    const testStart = Date.now();
     try {
-      const testStart = Date.now();
-      
       const testEmail = `auth-test-${Date.now()}@test.com`;
       const { error } = await supabase.auth.signUp({
         email: testEmail,
@@ -214,15 +211,14 @@ const TestRunner: React.FC = () => {
     }
 
     // Test 2: Profile creation trigger
+    const test2AuthStart = Date.now();
     try {
-      const testStart = Date.now();
-      
       // This test checks if the profile is automatically created
       // We'll simulate this for now
       tests.push({
         name: 'Profile creation trigger',
         passed: true,
-        duration: Date.now() - testStart
+        duration: Date.now() - test2AuthStart
       });
       
     } catch (error: any) {
@@ -230,7 +226,7 @@ const TestRunner: React.FC = () => {
         name: 'Profile creation trigger',
         passed: false,
         error: error.message,
-        duration: Date.now() - testStart
+        duration: Date.now() - test2AuthStart
       });
     }
 

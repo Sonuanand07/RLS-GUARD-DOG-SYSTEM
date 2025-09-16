@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { StudentProgressCard } from '@/components/StudentProgressCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { LogOut, BookOpen, TrendingUp } from 'lucide-react';
+import { LogOut, BookOpen, TrendingUp, User, Award } from 'lucide-react';
 
 interface Classroom {
   id: string;
@@ -122,36 +123,56 @@ const StudentDashboard = () => {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Student Dashboard</h1>
-              <p className="text-muted-foreground">
-                Welcome back, {profile?.first_name} {profile?.last_name}
-              </p>
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-8 h-8 text-blue-500" />
+              <div>
+                <h1 className="text-2xl font-bold text-blue-600">Student Dashboard</h1>
+                <p className="text-muted-foreground">
+                  Welcome back, {profile?.first_name} {profile?.last_name}
+                </p>
+              </div>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={signOut}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-blue-200 text-blue-700">Student Access</Badge>
+              <Button 
+                variant="outline" 
+                onClick={signOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-700">
+                My Profile
+              </CardTitle>
+              <User className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-800">{profile?.role}</div>
+              <p className="text-sm text-blue-600 mt-1">{profile?.first_name} {profile?.last_name}</p>
+            </CardContent>
+          </Card>
+          
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Progress Records
+                Total Subjects
               </CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{progress.length}</div>
+              <p className="text-sm text-muted-foreground mt-1">Active topics</p>
             </CardContent>
           </Card>
           
@@ -160,12 +181,15 @@ const StudentDashboard = () => {
               <CardTitle className="text-sm font-medium">
                 Completed Tasks
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <Award className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-green-600">
                 {progress.filter(p => p.status === 'completed').length}
               </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {progress.length > 0 ? Math.round((progress.filter(p => p.status === 'completed').length / progress.length) * 100) : 0}% completion rate
+              </p>
             </CardContent>
           </Card>
           
@@ -178,6 +202,7 @@ const StudentDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{classrooms.length}</div>
+              <p className="text-sm text-muted-foreground mt-1">Active classes</p>
             </CardContent>
           </Card>
         </div>
@@ -198,47 +223,13 @@ const StudentDashboard = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {progress.map((record) => (
-                  <div 
-                    key={record.id} 
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold">{record.topic}</h3>
-                        <Badge 
-                          className={`text-white ${getStatusColor(record.status)}`}
-                        >
-                          {record.status.replace('_', ' ')}
-                        </Badge>
-                      </div>
-                      
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        {record.updated_at && (
-                          <p>Updated: {new Date(record.updated_at).toLocaleDateString()}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateProgress(record.id, 'in_progress')}
-                        disabled={record.status === 'in_progress'}
-                      >
-                        In Progress
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => updateProgress(record.id, 'completed')}
-                        disabled={record.status === 'completed'}
-                      >
-                        Complete
-                      </Button>
-                    </div>
-                  </div>
+                  <StudentProgressCard
+                    key={record.id}
+                    progress={record}
+                    onUpdateProgress={updateProgress}
+                  />
                 ))}
               </div>
             )}

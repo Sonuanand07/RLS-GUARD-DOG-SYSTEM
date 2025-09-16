@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RoleBasedLayout } from "./components/RoleBasedLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -26,17 +27,17 @@ const App = () => (
             <Route 
               path="/student" 
               element={
-                <ProtectedRoute requiredRole="student">
+                <RoleBasedLayout requiredRole="student">
                   <StudentDashboard />
-                </ProtectedRoute>
+                </RoleBasedLayout>
               } 
             />
             <Route 
               path="/teacher" 
               element={
-                <ProtectedRoute requiredRole="teacher">
+                <RoleBasedLayout requiredRole="teacher">
                   <TeacherDashboard />
-                </ProtectedRoute>
+                </RoleBasedLayout>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
